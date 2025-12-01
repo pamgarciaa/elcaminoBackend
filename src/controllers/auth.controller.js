@@ -179,6 +179,8 @@ const sendTokenResponse = (user, statusCode, res) => {
         name: user.name,
         lastName: user.lastName,
         email: user.email,
+        address: user.address,
+        phone: user.phone,
         role: user.role,
         profilePicture: user.profilePicture,
       },
