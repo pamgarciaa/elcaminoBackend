@@ -27,11 +27,11 @@ const loginUser = async ({ email, password }) => {
 // UPDATE PROFILE
 const updateProfile = async (userId, updateData, newFile) => {
   const user = await User.findById(userId);
-  AppError.try(user, "User not found"); // Helper
+  if (!user) throw new AppError("User not found", 404);
 
   if (newFile) {
     updateData.profilePicture = newFile.filename;
-    // Lógica de borrado de imagen antigua...
+
     if (
       user.profilePicture &&
       !user.profilePicture.includes("default") &&
@@ -42,15 +42,25 @@ const updateProfile = async (userId, updateData, newFile) => {
         "../../uploads/users",
         user.profilePicture
       );
-      if (await fs.pathExists(oldPath)) await fs.remove(oldPath);
+      if (await fs.pathExists(oldPath)) {
+        await fs.remove(oldPath);
+      }
     }
   }
 
-  Object.assign(user, updateData);
+  if (updateData.name !== undefined) user.name = updateData.name;
+  if (updateData.lastName !== undefined) user.lastName = updateData.lastName;
+  if (updateData.username !== undefined) user.username = updateData.username;
+  if (updateData.phone !== undefined) user.phone = updateData.phone;
+  if (updateData.address !== undefined) user.address = updateData.address;
+  if (updateData.profilePicture !== undefined)
+    user.profilePicture = updateData.profilePicture;
+
   await user.save();
 
   const updatedUser = user.toObject();
   delete updatedUser.password;
+
   return updatedUser;
 };
 

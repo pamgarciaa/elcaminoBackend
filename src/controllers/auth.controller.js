@@ -91,9 +91,9 @@ const updateUserController = async (req, res, next) => {
     const userId = req.user._id;
 
     const { name, address, lastName, phone, username } = req.body;
+
     const updates = { name, address, lastName, phone, username };
 
-    // Limpiamos undefined
     Object.keys(updates).forEach(
       (key) => updates[key] === undefined && delete updates[key]
     );
@@ -104,7 +104,10 @@ const updateUserController = async (req, res, next) => {
       req.file
     );
 
-    res.status(200).json(updatedUser);
+    res.status(200).json({
+      status: "success",
+      user: updatedUser,
+    });
   } catch (error) {
     next(error);
   }
@@ -133,7 +136,6 @@ const forgotPasswordController = async (req, res, next) => {
     const { email } = req.body;
     const pin = await authService.forgotPassword(email);
 
-    // TODO: Enviar email real
     res.json({ message: "Email sent successfully", pin });
   } catch (error) {
     next(error);
@@ -161,6 +163,7 @@ const resetPasswordController = async (req, res, next) => {
 // --- HELPER (Send Token) ---
 const sendTokenResponse = (user, statusCode, res) => {
   const token = generateToken(user);
+
   const options = {
     expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     httpOnly: true,
@@ -179,10 +182,10 @@ const sendTokenResponse = (user, statusCode, res) => {
         name: user.name,
         lastName: user.lastName,
         email: user.email,
-        address: user.address,
-        phone: user.phone,
         role: user.role,
         profilePicture: user.profilePicture,
+        phone: user.phone || "",
+        address: user.address || "",
       },
     });
 };
