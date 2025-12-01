@@ -78,4 +78,32 @@ const checkout = async (userId, shippingAddress) => {
   return order;
 };
 
-export default { addToCart, getCart, checkout };
+// REMOVE ITEM FROM CART
+const removeItemFromCart = async (userId, productId) => {
+  // Buscamos el carrito del usuario
+  const cart = await Cart.findOne({ user: userId });
+
+  // Si no hay carrito, lanzamos error (o devolvemos null, segun prefieras)
+  AppError.try(cart, "Cart not found", 404);
+
+  // Verificamos si el item existe antes de intentar borrarlo (Opcional, pero buena práctica)
+  const itemExists = cart.items.some(
+    (item) => item.product.toString() === productId
+  );
+  if (!itemExists) {
+    throw new AppError("Product not found in cart", 404);
+  }
+
+  // Usamos $pull para eliminar el objeto del array 'items' que coincida con el product ID
+  // Esto es mucho más eficiente que filtrar el array en JS y guardar.
+  const updatedCart = await Cart.findOneAndUpdate(
+    { user: userId },
+    { $pull: { items: { product: productId } } },
+    { new: true } // Devuelve el carrito actualizado
+  ).populate("items.product");
+
+  return updatedCart;
+};
+
+// Asegúrate de exportarlo
+export default { addToCart, getCart, checkout, removeItemFromCart };

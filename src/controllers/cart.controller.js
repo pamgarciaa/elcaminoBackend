@@ -2,7 +2,7 @@ import cartService from "../services/cart.service.js";
 import AppError from "../utils/appError.util.js";
 
 // ADD TO CART
-const addToCart = async (req, res, next) => {
+const addToCartController = async (req, res, next) => {
   try {
     const { productId, quantity } = req.body;
 
@@ -26,7 +26,7 @@ const addToCart = async (req, res, next) => {
 };
 
 // GET CART
-const getCart = async (req, res, next) => {
+const getCartController = async (req, res, next) => {
   try {
     const cart = await cartService.getCart(req.user._id);
 
@@ -40,7 +40,7 @@ const getCart = async (req, res, next) => {
 };
 
 // CHECKOUT
-const checkout = async (req, res, next) => {
+const checkoutController = async (req, res, next) => {
   try {
     const { shippingAddress } = req.body;
 
@@ -51,12 +51,7 @@ const checkout = async (req, res, next) => {
     const order = await cartService.checkout(req.user._id, shippingAddress);
 
     if (!order) {
-      return next(
-        new AppError(
-          "No se pudo completar la compra. El carrito podría estar vacío o faltan datos.",
-          400
-        )
-      );
+      return next(new AppError("Purchase failed. Please try again.", 400));
     }
 
     res.status(201).json({
@@ -69,4 +64,32 @@ const checkout = async (req, res, next) => {
   }
 };
 
-export { addToCart, getCart, checkout };
+// DELETE ITEM FROM CART
+const deleteItemFromCartController = async (req, res, next) => {
+  try {
+    // CORRECCIÓN: Usamos req.params porque la ruta es /:productId
+    const { productId } = req.params;
+
+    // Verificamos que venga el ID
+    if (!productId) {
+      return next(new AppError("Product ID is required", 400));
+    }
+
+    const cart = await cartService.removeItemFromCart(req.user._id, productId);
+
+    res.status(200).json({
+      status: "success",
+      message: "Item removed from cart",
+      data: { cart },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export {
+  addToCartController,
+  getCartController,
+  checkoutController,
+  deleteItemFromCartController,
+};
