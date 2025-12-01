@@ -43,9 +43,7 @@ const checkout = async (userId, shippingAddress) => {
   for (const item of cart.items) {
     const product = item.product;
 
-    if (!product) {
-      throw new AppError("A product in your cart could not be found.", 404);
-    }
+    AppError.try(product, "A product in your cart could not be found.", 404);
 
     if (product.stock < item.quantity) {
       throw new AppError(
