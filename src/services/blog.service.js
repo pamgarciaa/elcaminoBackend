@@ -8,13 +8,18 @@ const createBlog = async (blogData) => {
 
 // EDIT
 const editBlog = async (id, updates) => {
-  const blog = await Blog.findByIdAndUpdate(id, updates, { new: true });
+  const blog = await Blog.findByIdAndUpdate(id, updates, {
+    new: true,
+  }).populate("author", "name username profilePicture");
   return AppError.try(blog, "Blog not found", 404);
 };
 
 // GET BY ID
 const getBlogById = async (id) => {
-  const blog = await Blog.findById(id);
+  const blog = await Blog.findById(id).populate(
+    "author",
+    "name username profilePicture"
+  );
   return AppError.try(blog, "Blog not found", 404);
 };
 
@@ -26,7 +31,7 @@ const deleteBlog = async (id) => {
 
 // GET ALL
 const getAllBlogs = async () => {
-  return await Blog.find();
+  return await Blog.find().populate("author", "name username profilePicture");
 };
 
 export default { createBlog, editBlog, deleteBlog, getBlogById, getAllBlogs };
