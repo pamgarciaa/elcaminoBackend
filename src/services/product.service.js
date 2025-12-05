@@ -8,8 +8,8 @@ const createProduct = async (productData) => {
 };
 
 // GET ALL PRODUCTS
-const getAllProducts = async () => {
-  return await Product.find();
+const getAllProducts = async (filter = {}) => {
+  return await Product.find(filter);
 };
 
 // UPDATE PRODUCT

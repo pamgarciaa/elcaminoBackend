@@ -5,10 +5,24 @@ import AppError from "../utils/appError.util.js";
 // CREATE PRODUCT
 const createProductController = async (req, res, next) => {
   try {
-    const { name, description, price, stock, category } = req.body;
+    const {
+      name,
+      description,
+      price,
+      stock,
+      category,
+      features,
+      level,
+      isDigital,
+    } = req.body;
 
     if (!req.file) {
       return next(new AppError("Image is required", 400));
+    }
+
+    let parsedFeatures = features;
+    if (typeof features === "string") {
+      parsedFeatures = features.split(",").map((f) => f.trim());
     }
 
     const productData = {
@@ -17,6 +31,9 @@ const createProductController = async (req, res, next) => {
       price,
       stock,
       category,
+      features: parsedFeatures || [],
+      level: level ? Number(level) : undefined,
+      isDigital: isDigital === "true" || isDigital === true,
       image: req.file.filename,
       createdBy: req.user._id,
     };
@@ -36,12 +53,31 @@ const createProductController = async (req, res, next) => {
 // GET ALL PRODUCTS
 const getAllProductsController = async (req, res, next) => {
   try {
-    const products = await productService.getAllProducts();
+    const filter = { category: { $ne: "kit" } };
+    const products = await productService.getAllProducts(filter);
 
     res.status(200).json({
       status: "success",
       results: products.length,
       data: { products },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET ALL KITS (Solo trae kits, ordenados por nivel)
+const getAllKitsController = async (req, res, next) => {
+  try {
+    const filter = { category: "kit" };
+    const kits = await productService.getAllProducts(filter);
+
+    kits.sort((a, b) => a.level - b.level);
+
+    res.status(200).json({
+      status: "success",
+      results: kits.length,
+      data: { kits },
     });
   } catch (error) {
     next(error);
@@ -83,6 +119,7 @@ const deleteProductController = async (req, res, next) => {
 export {
   createProductController,
   getAllProductsController,
+  getAllKitsController,
   updateProductController,
   deleteProductController,
 };
